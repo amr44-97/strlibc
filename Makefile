@@ -38,3 +38,5 @@ assembly: libtest.c
 clean:
 	rm *.o *.so  libtest
 	rm ./gen_assembly/*.s
+	rm ./gen_assembly/*.asm
+	rm ./vlunerabilities/test
