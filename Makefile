@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS = -Wall -Wextra -pedantic -g -Os -std=gnu18
+CFLAGS = -Wall -Wextra -pedantic -Os -std=gnu18
 BINS = assembly libtest  test libstr.so file_handle.so
 
 all: $(BINS)
