@@ -1,7 +1,7 @@
 CC = gcc
 
-CFLAGS = -Wall -Wextra -pedantic -Os -std=gnu18
-BINS = assembly libtest  test libstr.so file_handle.so
+CFLAGS = -Wall -Wextra -pedantic -O2 -std=gnu11
+BINS = libtest_asm libtest  test libstr.so file_handle.so
 
 all: $(BINS)
 
@@ -29,9 +29,9 @@ test: ./vlunerabilities/test.c file_handle.o libstr.o
 	$(CC) $(CFLAGS) -o $@ $^
 	mv $@ ./vlunerabilities/
 	
-
-assembly: libtest.c 
-	$(CC) $(CFLAGS) -S $^ -o ./gen_assembly/libtest.s
+libtest_asm: libtest.c 
+	$(CC) $(CFLAGS) -S $^ -o ./gen_assembly/$@-AT.s
+	$(CC) $(CFLAGS) -S -masm=intel  $^ -o ./gen_assembly/$@-intel.asm
 
 
 

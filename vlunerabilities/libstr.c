@@ -13,15 +13,12 @@
 
 static void* __STRING_STACK[__STRING_STACK_SIZE] = {NULL};
 static void* __MARKED_FREE[__STRING_STACK_SIZE] = {NULL};
-//static void* __STRING_REALLOC[__STRING_STACK_SIZE] = {NULL};
 
+
+static string __str_copy(string __str);
+static list __str_split(char *old_list);
 static inline void add_strptr_stack(void *__str);
-static inline void update_ptr_pointer(void *old_ptr, void * new_ptr);
-
 static inline int  check_marked_free(string __str);
-
-
-
 
 // counter to the allocations
 unsigned int __stack_pos = 0;
@@ -32,14 +29,6 @@ static inline void add_strptr_stack(void *__str){
         __STRING_STACK[__stack_pos] = __str;
         __stack_pos++;
 }
-static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
-    for(int i = 0 ; i < (int) __stack_pos; i++){
-        if(__STRING_STACK[i] == old_ptr){
-           __STRING_STACK[i] = new_ptr;
-        }
-    }
-}
-
 
 void __str_free_all(){
     for(int i =0 ; i <=  (int)__stack_pos;i++){
@@ -57,6 +46,9 @@ string newstr(char *__str){
 //[NOTE]    // TODO fix undefined behavior
     string __local = {.str = (char*) calloc(len+1,sizeof(char)),
                       .length = len,
+                      .find = &__str_find_char,
+                      .copy = &__str_copy,
+                      .split = &__str_split
     } ;
 //[NOTE]   // Valgrind gives error when copying to not enough space
         memccpy(__local.str, __str,'\0', len);
@@ -79,7 +71,7 @@ static inline int  check_marked_free(string __str){
 }
 
 
-string __str_copy(string __str){
+static string __str_copy(string __str){
     
     if(__str.str == NULL) {
         fprintf(stderr,"[ERROR:] copying from empty [NULL] string\n");
@@ -110,12 +102,12 @@ void __str_print(string __str){
 }
 
 
-int __str_find_char(string __str, char element){
+_pos __str_find_char(string __str, char element){
     _pos __curr_pos = 0;
     for(int i =0 ; i< (int) __str.length;i++){
         if(__str.str[i] == element){__curr_pos = i;break;}
     }
-    return (int)__curr_pos;
+    return __curr_pos;
 }
 
 
@@ -135,7 +127,7 @@ int __str_find_char(string __str, char element){
 //}
 
 
-list __str_split(char *old_list) {
+static list __str_split(char *old_list) {
   list new_list ={.ptr = calloc(MIN_LIST, sizeof(char*)) ,
                  .length = 0
   };
@@ -160,14 +152,14 @@ list __str_split(char *old_list) {
     return new_list;
 }
 
-static inline void __str_check_error(string __str){
+void __str_check_error(string __str){
     if(__str.str == NULL || __str.length == 0){
         fprintf(stderr,"[ERROR]: unaccessable OR empty string\n");
         exit(-1);
     }
 }
 
-static inline void __char_check_error(char* __str){
+void __char_check_error(char* __str){
     if(__str == NULL ){
         fprintf(stderr,"[ERROR]: unaccessable OR empty char ptr\n");
         exit(-1);
@@ -175,20 +167,15 @@ static inline void __char_check_error(char* __str){
 }
 
 
-string __str_cat(string __str ,char * __char){
+void __str_cat(string __str ,char * __char){
     __str_check_error(__str);
     __char_check_error(__char);
-    char *old_ptr = __str.str;
-   // size_t __len = strlen(__char);
-    size_t tot = __str.length + strlen(__char);
-    __str.str = realloc(__str.str, tot * sizeof(char));
+    size_t __len = strlen(__char)+1;
+    __str.str = realloc(__str.str,(__str.length + __len)*sizeof(char));
     char *ppt = &__str.str[__str.length];
-    memcpy(ppt, __char, strlen(__char));
-    char* new_ptr = __str.str; 
-    update_ptr_pointer(old_ptr, new_ptr);
-    __str.length = tot; // [ERROR:]
-    return __str;
+    memcpy(ppt, __char, __len);
 }
+
 
 
 

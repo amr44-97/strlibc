@@ -13,11 +13,6 @@ typedef struct list list;
 struct string {
     char *str;
     size_t length;
-   _pos (*find)(string __str, char element);
-    string (*copy)(string __str);
-    list (*split)(char *__str);
-    char* (*reverse_str)(char *__string);  
-    char* (*substr)(char *str);
 };
 
 struct list {
@@ -28,10 +23,14 @@ struct list {
 // string function
 string newstr(char *__str); 
 char* reverse_str(char *__string);  
-_pos __str_find_char(string __str, char element);
-char* split(string *__str,const char __delim[]);
-//string copy(string __str);
+int __str_find_char(string __str, char element);
+list __str_split(char *old_list);
+//char* split(string *__str,const char __delim[]);
+// static string copy(string __str); # defined static in the libstr.c
 char* substr(char *__str);
+string __str_cat(string __str,char * __char);
+string _to_str(char* __char);
+
 
 // memory functions 
 // static void add_strptr_stack(string *__str);
@@ -39,11 +38,13 @@ void __str_free_all();
 //static inline void add_strptr_stack(char *__str);
 //static inline int  check_marked_free(string __str);
 
+//void __char_check_error(char* __str);
+//void __str_check_error(string __str);
 
 // operations 
 void __str_println(string __str);
 void __str_print(string __str);
-_pos __str_find_char(string __str, char element);
+int __str_find_char(string __str, char element);
 
 
 #endif
