@@ -4,10 +4,22 @@
 #include <string.h>
 #include <sys/cdefs.h>
 #include <unistd.h>
-
+#include <stdbool.h>
+#include <ctype.h>
 
 #define __STRING_STACK_SIZE 20000
 #define MIN_LIST 500
+
+/*
+ * TODO
+ * 1- add input strings
+ *
+ *
+ *
+ *
+*/
+
+
 
 // a container to all the allocatoins 
 
@@ -41,7 +53,7 @@ static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
 }
 
 
-void __str_free_all(){
+void str_free_all(){
     for(int i =0 ; i <=  (int)__stack_pos;i++){
         __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
         free(__STRING_STACK[i]);
@@ -79,7 +91,7 @@ static inline int  check_marked_free(string __str){
 }
 
 
-string __str_copy(string __str){
+string str_copy(string __str){
     
     if(__str.str == NULL) {
         fprintf(stderr,"[ERROR:] copying from empty [NULL] string\n");
@@ -100,17 +112,17 @@ string __str_copy(string __str){
 }
 
 
-void __str_println(string __str){
+void str_println(string __str){
  __attribute_maybe_unused__ int s= write(1, __str.str, __str.length);
 __attribute_maybe_unused__ int sa= write(1,"\n", 1);
 }
 
-void __str_print(string __str){
+void str_print(string __str){
  __attribute_maybe_unused__ int s= write(1, __str.str, __str.length);
 }
 
 
-int __str_find_char(string __str, char element){
+int str_find_char(string __str, char element){
     _pos __curr_pos = 0;
     for(int i =0 ; i< (int) __str.length;i++){
         if(__str.str[i] == element){__curr_pos = i;break;}
@@ -135,7 +147,7 @@ int __str_find_char(string __str, char element){
 //}
 
 
-list __str_split(char *old_list) {
+list str_split(char *old_list) {
   list new_list ={.ptr = calloc(MIN_LIST, sizeof(char*)) ,
                  .length = 0
   };
@@ -175,7 +187,7 @@ static inline void __char_check_error(char* __str){
 }
 
 
-string __str_cat(string __str ,char * __char){
+string str_cat(string __str ,char * __char){
     __str_check_error(__str);
     __char_check_error(__char);
     char *old_ptr = __str.str;
@@ -190,5 +202,38 @@ string __str_cat(string __str ,char * __char){
     return __str;
 }
 
+void str_input(string* buf){
+    buf->str = NULL;
+    buf->length =0;
+    int c = fgetc(stdin);
+    buf->str = calloc(25, sizeof(char));
+    char *old_ptr = buf->str;
+    int i =0 ;
+    int siz = 25;
+    
+    while (c != '\n' && i <  siz) {
+        if(i == siz-1){
+            buf->str = realloc(buf->str, (siz +20)*sizeof(char));
+            memset(&buf->str[siz], 0, 20 * sizeof(char));           
+            char *_new = buf->str;
+            siz = siz + 20;
+            update_ptr_pointer(old_ptr, _new);
+        }
+        buf->str[i] = c;
+        c = fgetc(stdin);
+        i++;
+    }
+
+   // unsigned long int __lens=0;
+   // for(int i =0 ; i < siz; i++){
+   //     if(!((isalpha(buf->str[i])) && isspace(buf->str[i]))){
+   //         __lens = i;
+   //         break;
+   //     }
+   // }
+  char *fin_ptr = buf->str;
+  buf->length = siz;
+  add_strptr_stack(fin_ptr);
+}
 
 

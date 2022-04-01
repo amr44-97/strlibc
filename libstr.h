@@ -23,18 +23,18 @@ struct list {
 // string function
 string newstr(char *__str); 
 char* reverse_str(char *__string);  
-int __str_find_char(string __str, char element);
-list __str_split(char *old_list);
+int str_find_char(string __str, char element);
+list str_split(char *old_list);
 //char* split(string *__str,const char __delim[]);
 // static string copy(string __str); # defined static in the libstr.c
 char* substr(char *__str);
-string __str_cat(string __str,char * __char);
+string str_cat(string __str,char * __char);
 string _to_str(char* __char);
-
+void str_input(string* buf);
 
 // memory functions 
 // static void add_strptr_stack(string *__str);
-void __str_free_all();
+void str_free_all();
 //static inline void add_strptr_stack(char *__str);
 //static inline int  check_marked_free(string __str);
 
@@ -42,9 +42,9 @@ void __str_free_all();
 //void __str_check_error(string __str);
 
 // operations 
-void __str_println(string __str);
-void __str_print(string __str);
-int __str_find_char(string __str, char element);
+void str_println(string __str);
+void str_print(string __str);
+int str_find_char(string __str, char element);
 
 
 #endif

@@ -16,7 +16,7 @@ int main()
     
     string vul = newstr(buf);
 
-    __str_println(vul);
+    str_println(vul);
 }
 
 
