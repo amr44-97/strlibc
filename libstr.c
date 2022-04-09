@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define __STRING_STACK_SIZE 20000
-#define MIN_LIST 500
+#define __MIN_LIST__STR_ 500
 
 /*
  * TODO
@@ -34,9 +34,9 @@ static inline int  check_marked_free(string __str);
 static inline int  check_marked_free_ptr(char* __str);
 
 // counter to the allocations
-unsigned int __stack_pos = 0;
+static unsigned int __stack_pos = 0;
 // counter to freed memory
-unsigned int __Marked_Free_POS = 0;
+static unsigned int __Marked_Free_POS = 0;
 
 static inline void add_strptr_stack(void *__str){
         __STRING_STACK[__stack_pos] = __str;
@@ -229,7 +229,7 @@ int str_find_char(string __str, char element){
 
 
 list str_split(char *old_list) {
-  list new_list ={.ptr = calloc(MIN_LIST, sizeof(char*)) ,
+  list new_list ={.ptr = calloc(__MIN_LIST__STR_, sizeof(char*)) ,
                  .length = 0
   };
 
