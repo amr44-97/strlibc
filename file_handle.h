@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<assert.h>
 #include "libstr.h"
+
 typedef struct file{
     const char *name;
     size_t size;
@@ -13,7 +14,7 @@ typedef struct file{
 
 file open_file(const char *file_name,const char *flag);
 string read_file_to_string(const char *file_name);
-//void close_file(file f);
+void close_file(file fl);
 
 #endif
 

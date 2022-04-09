@@ -1,4 +1,6 @@
 #include "libstr.h"
+#include "error_out.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,14 +14,12 @@
 
 /*
  * TODO
- * 1- add input strings
- *
- *
+ * 1- add input strings [X]
+ * 2- add empty strings
+ * 3- add newstr with defined size [X]
  *
  *
 */
-
-
 
 // a container to all the allocatoins 
 
@@ -31,9 +31,7 @@ static inline void add_strptr_stack(void *__str);
 static inline void update_ptr_pointer(void *old_ptr, void * new_ptr);
 
 static inline int  check_marked_free(string __str);
-
-
-
+static inline int  check_marked_free_ptr(char* __str);
 
 // counter to the allocations
 unsigned int __stack_pos = 0;
@@ -55,26 +53,71 @@ static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
 
 void str_free_all(){
     for(int i =0 ; i <=  (int)__stack_pos;i++){
-        __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
-        free(__STRING_STACK[i]);
-        __STRING_STACK[i] = NULL;
+        while(__STRING_STACK[i] != NULL){
+         __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
+         if(check_marked_free_ptr(__STRING_STACK[i])){ // prevent double free errors
+             continue;
+         }  
+          free(__STRING_STACK[i]);
+         __STRING_STACK[i] = NULL;
         __Marked_Free_POS++;
+        }
     }
     __stack_pos = 0;
 }
+
+void free_str(string __str){
+    if(check_marked_free(__str)){ // prevent double free errors
+        return;       
+    }
+
+    if(__stack_pos > 0 ){ // check for elements before going on
+        for(int i = 0 ; i < (int) __stack_pos;i++){
+            if(__STRING_STACK[i] == __str.str){
+                    free(__STRING_STACK[i]);
+                    __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
+                    __STRING_STACK[i] = NULL;
+                    __Marked_Free_POS++;
+                    __stack_pos--;
+                    break;
+            }
+        }
+    }
+}
+
+
 
 string newstr(char *__str){
     const unsigned int len = strlen(__str);
 //[NOTE]  undefined behavior with non-null terminated strings
 //[NOTE]    // TODO fix undefined behavior
-    string __local = {.str = (char*) calloc(len+1,sizeof(char)),
-                      .length = len,
-    } ;
+    string __local ;
+    __local.str = (char*) calloc(len+1,sizeof(char));
+                     __local.length = len;
+    
 //[NOTE]   // Valgrind gives error when copying to not enough space
-        memccpy(__local.str, __str,'\0', len);
+        memccpy(__local.str, __str,'\0', len+1);
         add_strptr_stack(__local.str);
         return __local;
 }
+
+string newstr_s(char *__str, size_t size){
+    const unsigned int len = size;
+//[NOTE]  undefined behavior with non-null terminated strings
+//[NOTE]    // TODO fix undefined behavior
+    string __local ;
+    __local.str = (char*) calloc(len+1,sizeof(char));
+                     __local.length = len;
+    
+//[NOTE]   // Valgrind gives error when copying to not enough space
+        memccpy(__local.str, __str,'\0', len+1);
+        add_strptr_stack(__local.str);
+        return __local;
+}
+
+
+
+
 
 static inline int  check_marked_free(string __str){
     int no_err = 0;
@@ -90,15 +133,30 @@ static inline int  check_marked_free(string __str){
     return no_err;
 }
 
+static inline int  check_marked_free_ptr(char* __str){
+    int no_err = 0;
+    if(__Marked_Free_POS > 0){ 
+        for( int i =0; i < (int)__Marked_Free_POS;i++)
+          {
+            if(__str == __MARKED_FREE[i]){
+                 //fprintf(stderr, "[ERROR:] %s",__error_type);
+                 no_err = 1;  
+            }
+        }
+    }
+    return no_err;
+}
+
+
 
 string str_copy(string __str){
     
     if(__str.str == NULL) {
-        fprintf(stderr,"[ERROR:] copying from empty [NULL] string\n");
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR:] copying from empty [NULL] string\n" ANSI_COLOR_RESET);
         exit(-1);
     }
     if(check_marked_free(__str)){
-       fprintf(stderr, "[ERROR:] copying from unaccessable string\n");
+       fprintf(stderr,ANSI_COLOR_RED "[ERROR:] copying from unaccessable string\n" ANSI_COLOR_RESET);
         exit(-1);
     }
     const unsigned int len= __str.length ;
@@ -111,14 +169,37 @@ string str_copy(string __str){
         return __local;
 }
 
+// output functions 
 
 void str_println(string __str){
- __attribute_maybe_unused__ int s= write(1, __str.str, __str.length);
-__attribute_maybe_unused__ int sa= write(1,"\n", 1);
+  write(1, __str.str, __str.length);
+  write(1,"\n", 1);
 }
 
 void str_print(string __str){
- __attribute_maybe_unused__ int s= write(1, __str.str, __str.length);
+ write(1, __str.str, __str.length);
+}
+
+
+void list_print(list __lis){
+printf("{");
+  for (int i = 0; i < (int)__lis.length; ++i) {
+    if (__lis.ptr[i] == NULL) {
+      break;
+    }
+    if (*__lis.ptr[i] == '\0') { // to ignore NULL as they also considerd tokens
+      continue;
+    }
+    if(i <= (int) __lis.length-2){
+    printf(" \"%s\",", __lis.ptr[i]);
+    }
+    if(i == (int) __lis.length-1){
+    printf(" \"%s\"", __lis.ptr[i]);
+    }
+    
+  }
+  printf("}\n");
+
 }
 
 
@@ -174,14 +255,14 @@ list str_split(char *old_list) {
 
 static inline void __str_check_error(string __str){
     if(__str.str == NULL || __str.length == 0){
-        fprintf(stderr,"[ERROR]: unaccessable OR empty string\n");
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: unaccessable OR empty string\n" ANSI_COLOR_RESET);
         exit(-1);
     }
 }
 
 static inline void __char_check_error(char* __str){
     if(__str == NULL ){
-        fprintf(stderr,"[ERROR]: unaccessable OR empty char ptr\n");
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: unaccessable OR empty char ptr\n" ANSI_COLOR_RESET);
         exit(-1);
     }
 }
@@ -190,16 +271,33 @@ static inline void __char_check_error(char* __str){
 string str_cat(string __str ,char * __char){
     __str_check_error(__str);
     __char_check_error(__char);
-    char *old_ptr = __str.str;
-   // size_t __len = strlen(__char);
+    if(check_marked_free(__str)){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]:using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
+        exit(1);
+    }
+   // char *old_ptr = __str.str;
+    size_t __len = strlen(__char);
+    size_t oldlen = __str.length;
+    
     size_t tot = __str.length + strlen(__char);
-    __str.str = realloc(__str.str, tot * sizeof(char));
-    char *ppt = &__str.str[__str.length];
-    memcpy(ppt, __char, strlen(__char));
-    char* new_ptr = __str.str; 
-    update_ptr_pointer(old_ptr, new_ptr);
-    __str.length = tot; // [ERROR:]
-    return __str;
+    
+    string ret_str ={.str =(char *) malloc(sizeof(char)*(tot+1)) ,.length  = tot+1};
+     memset(ret_str.str,0,tot+1);
+    if(ret_str.str == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: failed to reallocarray at [str_cat(),libstr.c:%d]\n" ANSI_COLOR_RESET,__LINE__);
+            exit(1);
+    }
+    memcpy(ret_str.str,__str.str,__str.length);
+    
+    memccpy(&ret_str.str[__str.length-1],__char,'\0',__len+1);
+    //update_ptr_pointer(old_ptr, ret_str.str);
+    add_strptr_stack(ret_str.str);
+    if(ret_str.length <= oldlen){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: the lenght of the new string didn't change at [str_cat(),libstr.c:%d]\n" ANSI_COLOR_RESET ,__LINE__);
+        printf("lenght= %lu\n",ret_str.length);
+    }
+
+    return ret_str;
 }
 
 void str_input(string* buf){
@@ -224,13 +322,6 @@ void str_input(string* buf){
         i++;
     }
 
-   // unsigned long int __lens=0;
-   // for(int i =0 ; i < siz; i++){
-   //     if(!((isalpha(buf->str[i])) && isspace(buf->str[i]))){
-   //         __lens = i;
-   //         break;
-   //     }
-   // }
   char *fin_ptr = buf->str;
   buf->length = siz;
   add_strptr_stack(fin_ptr);

@@ -15,6 +15,7 @@ struct string {
     size_t length;
 };
 
+// length of list is the number of elements
 struct list {
     char** ptr;
     size_t length;
@@ -22,6 +23,8 @@ struct list {
 
 // string function
 string newstr(char *__str); 
+string newstr_s(char *__str, size_t size);
+
 char* reverse_str(char *__string);  
 int str_find_char(string __str, char element);
 list str_split(char *old_list);
@@ -33,8 +36,8 @@ string _to_str(char* __char);
 void str_input(string* buf);
 
 // memory functions 
-// static void add_strptr_stack(string *__str);
 void str_free_all();
+void free_str(string __str);
 //static inline void add_strptr_stack(char *__str);
 //static inline int  check_marked_free(string __str);
 
@@ -44,6 +47,7 @@ void str_free_all();
 // operations 
 void str_println(string __str);
 void str_print(string __str);
+void list_print(list __lis);
 int str_find_char(string __str, char element);
 
 
