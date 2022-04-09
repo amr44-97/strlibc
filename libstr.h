@@ -35,9 +35,11 @@ string str_cat(string __str,char * __char);
 string _to_str(char* __char);
 void str_input(string* buf);
 
+
 // memory functions 
 void str_free_all();
 void free_str(string __str);
+void print_alloc_info();
 //static inline void add_strptr_stack(char *__str);
 //static inline int  check_marked_free(string __str);
 

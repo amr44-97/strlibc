@@ -27,22 +27,22 @@ static void* __STRING_STACK[__STRING_STACK_SIZE] = {NULL};
 static void* __MARKED_FREE[__STRING_STACK_SIZE] = {NULL};
 //static void* __STRING_REALLOC[__STRING_STACK_SIZE] = {NULL};
 
-static inline void add_strptr_stack(void *__str);
-static inline void update_ptr_pointer(void *old_ptr, void * new_ptr);
+__attribute__((always_inline)) static inline void add_strptr_stack(void *__str);
+__attribute__((always_inline)) static inline void update_ptr_pointer(void *old_ptr, void * new_ptr);
 
-static inline int  check_marked_free(string __str);
-static inline int  check_marked_free_ptr(char* __str);
+__attribute__((always_inline)) static inline int check_marked_free(string __str);
+__attribute__((always_inline)) static inline int check_marked_free_ptr(char* __str);
 
 // counter to the allocations
 static unsigned int __stack_pos = 0;
 // counter to freed memory
 static unsigned int __Marked_Free_POS = 0;
 
-static inline void add_strptr_stack(void *__str){
+__attribute__((always_inline)) static inline void add_strptr_stack(void *__str){
         __STRING_STACK[__stack_pos] = __str;
         __stack_pos++;
 }
-static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
+__attribute__((always_inline)) static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
     for(int i = 0 ; i < (int) __stack_pos; i++){
         if(__STRING_STACK[i] == old_ptr){
            __STRING_STACK[i] = new_ptr;
@@ -50,32 +50,39 @@ static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
     }
 }
 
+void print_alloc_info(){
+    printf("__stack_pos = %u\n",__stack_pos);
+    printf("__Marked_Free_POS = %u\n",__Marked_Free_POS);
+}
+
 
 void str_free_all(){
-    for(int i =0 ; i <=  (int)__stack_pos;i++){
-        while(__STRING_STACK[i] != NULL){
-         __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
-         if(check_marked_free_ptr(__STRING_STACK[i])){ // prevent double free errors
-             continue;
-         }  
-          free(__STRING_STACK[i]);
-         __STRING_STACK[i] = NULL;
-        __Marked_Free_POS++;
-        }
+    int tmp  = (int) __stack_pos;
+    for(int i = 0 ; i <  tmp ;i++){
+      //  while( __STRING_STACK[i] != NULL){
+            if(__STRING_STACK[i] == NULL){continue;}  
+            if(check_marked_free_ptr(__STRING_STACK[i])){  continue;} // prevent double free errors
+                      
+                      __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
+                       free(__STRING_STACK[i]);
+                      __STRING_STACK[i] = NULL;
+                      __Marked_Free_POS++;
+                      __stack_pos--;
+      //  }
     }
-    __stack_pos = 0;
+    //__stack_pos = 0;
 }
 
 void free_str(string __str){
     if(check_marked_free(__str)){ // prevent double free errors
         return;       
     }
-
     if(__stack_pos > 0 ){ // check for elements before going on
         for(int i = 0 ; i < (int) __stack_pos;i++){
             if(__STRING_STACK[i] == __str.str){
-                    free(__STRING_STACK[i]);
+                if(check_marked_free_ptr(__str.str)){continue;}
                     __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
+                    free(__STRING_STACK[i]);
                     __STRING_STACK[i] = NULL;
                     __Marked_Free_POS++;
                     __stack_pos--;
@@ -117,12 +124,10 @@ string newstr_s(char *__str, size_t size){
 
 
 
-
-
-static inline int  check_marked_free(string __str){
+__attribute__((always_inline)) static inline int check_marked_free(string __str){
     int no_err = 0;
     if(__Marked_Free_POS > 0){ 
-        for( int i =0; i < (int)__Marked_Free_POS;i++)
+        for( int i =0; i <= (int)__Marked_Free_POS;i++)
           {
             if(__str.str == __MARKED_FREE[i]){
                  //fprintf(stderr, "[ERROR:] %s",__error_type);
@@ -133,10 +138,10 @@ static inline int  check_marked_free(string __str){
     return no_err;
 }
 
-static inline int  check_marked_free_ptr(char* __str){
+__attribute__((always_inline)) static inline int  check_marked_free_ptr(char* __str){
     int no_err = 0;
     if(__Marked_Free_POS > 0){ 
-        for( int i =0; i < (int)__Marked_Free_POS;i++)
+        for( int i =0; i <= (int)__Marked_Free_POS;i++)
           {
             if(__str == __MARKED_FREE[i]){
                  //fprintf(stderr, "[ERROR:] %s",__error_type);
@@ -172,19 +177,32 @@ string str_copy(string __str){
 // output functions 
 
 void str_println(string __str){
+  
+if(check_marked_free_ptr(__str.str) || __str.str == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]:print error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
+        exit(1);
+    }
+
   write(1, __str.str, __str.length);
   write(1,"\n", 1);
 }
 
 void str_print(string __str){
- write(1, __str.str, __str.length);
+if(check_marked_free_ptr(__str.str) || __str.str == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]:print error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
+        exit(1);
+    }
+     write(1, __str.str, __str.length);
 }
 
 
 void list_print(list __lis){
+
+
 printf("{");
   for (int i = 0; i < (int)__lis.length; ++i) {
-    if (__lis.ptr[i] == NULL) {
+    
+    if (__lis.ptr[i] == NULL ) {
       break;
     }
     if (*__lis.ptr[i] == '\0') { // to ignore NULL as they also considerd tokens
@@ -201,6 +219,7 @@ printf("{");
   printf("}\n");
 
 }
+
 
 
 int str_find_char(string __str, char element){
@@ -228,13 +247,21 @@ int str_find_char(string __str, char element){
 //}
 
 
-list str_split(char *old_list) {
-  list new_list ={.ptr = calloc(__MIN_LIST__STR_, sizeof(char*)) ,
-                 .length = 0
-  };
+list str_split(char *strc) {
 
+    if(check_marked_free_ptr(strc) || strc == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: str_split error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
+        exit(1);
+    }
+
+  list new_list = {.ptr = calloc(__MIN_LIST__STR_,sizeof(char*)), .length =0};
+    
   add_strptr_stack(new_list.ptr);
-  //char **new_list = calloc(MIN_LIST, sizeof(char*))  ;
+  size_t __len = strlen(strc);
+
+  char* old_list = calloc(__len+1, sizeof(char));
+  memcpy(old_list, strc,__len+1);
+  add_strptr_stack(old_list);
   char *ptr_listclone;
   ptr_listclone = &old_list[0];
   new_list.ptr[0] = ptr_listclone;
@@ -253,14 +280,52 @@ list str_split(char *old_list) {
     return new_list;
 }
 
-static inline void __str_check_error(string __str){
+
+
+list str_split_new(char *strc) {
+
+    if(check_marked_free_ptr(strc) || strc == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: str_split error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
+        exit(1);
+    }
+
+  list new_list = {.ptr = calloc(__MIN_LIST__STR_,sizeof(char*)), .length =0};
+    
+  add_strptr_stack(new_list.ptr);
+  size_t __len = strlen(strc);
+
+  char* old_list = calloc(__len+1, sizeof(char));
+  memcpy(old_list, strc,__len+1);
+  add_strptr_stack(old_list);
+  char *ptr_listclone;
+  ptr_listclone = &old_list[0];
+  new_list.ptr[0] = ptr_listclone;
+  int i = 0,x =0 ;
+  
+  while (old_list[i] != '\0') {
+    if (old_list[i] == ' ' || old_list[i] == '\n' || old_list[i] == ',') {
+      old_list[i] = '\0';
+      ptr_listclone = &old_list[i + 1];
+      new_list.ptr[x+1] = ptr_listclone;
+      x++;
+    }
+    i++;
+  }
+     new_list.length = x+1;
+    return new_list;
+}
+
+
+
+
+static  void __str_check_error(string __str){
     if(__str.str == NULL || __str.length == 0){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]: unaccessable OR empty string\n" ANSI_COLOR_RESET);
         exit(-1);
     }
 }
 
-static inline void __char_check_error(char* __str){
+static  void __char_check_error(char* __str){
     if(__str == NULL ){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]: unaccessable OR empty char ptr\n" ANSI_COLOR_RESET);
         exit(-1);
@@ -271,7 +336,8 @@ static inline void __char_check_error(char* __str){
 string str_cat(string __str ,char * __char){
     __str_check_error(__str);
     __char_check_error(__char);
-    if(check_marked_free(__str)){
+
+    if(check_marked_free(__str) || __str.str == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]:using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
         exit(1);
     }

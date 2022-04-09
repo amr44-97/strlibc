@@ -7,8 +7,8 @@
 
 
 int main(int argc,char **argv){
-    (void) argc;
-    (void) argv;
+   // (void) argc;
+  //  (void) argv;
   
     if(argc <2 ){
         fprintf(stderr, "no input ERROR\n");
@@ -25,7 +25,7 @@ int main(int argc,char **argv){
     string lsd = str_cat(sd,"--- another random shit alsoaz saadasdasd -- ;la,l,mad adadqneqopnpla; ;, ,xax5141231cnac adQSPAHCH BKBAKSDBAKBAKB");
     str_println(lsd);
     printf("lsd size = %lu\n",lsd.length);
-
+    
     string sds = newstr("hello people How are you iam groot ---- random stuff --asdadadadfsdoihytguihojuyafdukalidua;ahoi;fga");
 
     str_println(sds);
@@ -34,13 +34,25 @@ printf("-----------------------------------------------------------------\n");
 printf("-----------------------------------------------------------------\n");
 printf("-----------------------------------------------------------------\n");
 
-
     list vec = str_split(sd.str);
+    
     
     list_print(vec);
 
 
-    str_free_all();
+printf("-----------------------------------------------------------------\n");
+printf("-----------------------------------------------------------------\n");
+printf("-----------------------------------------------------------------\n");
+
+
+    list vec2 = str_split(argv[1]);
+    
+    list_print(vec2);
+
+    print_alloc_info();
+
+    
+    print_alloc_info();
 }
 
 
