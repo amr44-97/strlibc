@@ -4,55 +4,54 @@
 #include <wchar.h>
 #include "libstr.h"
 #include "file_handle.h"
-
+#include <ctype.h>
 
 int main(int argc,char **argv){
-   // (void) argc;
-  //  (void) argv;
+    (void) argc;
+//    (void) argv;
   
     if(argc <2 ){
         fprintf(stderr, "no input ERROR\n");
     //    exit(-1);
     }
   
-    string AS = newstr_s("hello",5);
-    str_println(AS);
-    string sd = newstr("hello people How are you iam groot ---- random stuff --asdad adadf sdoihy tgui hoj uya fdu kali dua ;a hoi ;fga");
-    
-    str_println(sd);
-    printf("sd size = %lu\n",sd.length);
-    
-    string lsd = str_cat(sd,"--- another random shit alsoaz saadasdasd -- ;la,l,mad adadqneqopnpla; ;, ,xax5141231cnac adQSPAHCH BKBAKSDBAKBAKB");
-    str_println(lsd);
-    printf("lsd size = %lu\n",lsd.length);
-    
-    string sds = newstr("hello people How are you iam groot ---- random stuff --asdadadadfsdoihytguihojuyafdukalidua;ahoi;fga");
 
-    str_println(sds);
-    printf("sds size = %lu\n",sds.length);
-printf("-----------------------------------------------------------------\n");
-printf("-----------------------------------------------------------------\n");
-printf("-----------------------------------------------------------------\n");
+  // string ppl = newstr("hello adas groot x86_64");
+ string ppl = read_file_to_string(argv[1]);
+ list mpv =  str_split(ppl.str,ppl.length);
+    printlis(mpv);  
+//   for(int i = 0; i < (int) mpv.length;i++){
+//       printf("{%s}\n",mpv.ptr[i]);
+//   }
+   int x=0;
+  for(int i = 0; i < (int) ppl.length;i++){
+      if(ppl.str[i] == ' '){
+          x++;
+      } 
+  }
 
-    list vec = str_split(sd.str);
-    
-    
-    list_print(vec);
-
-
-printf("-----------------------------------------------------------------\n");
-printf("-----------------------------------------------------------------\n");
-printf("-----------------------------------------------------------------\n");
-
-
-    list vec2 = str_split(argv[1]);
-    
-    list_print(vec2);
-
+   printf("token_num = %i\n",x);
+   printf("strlen = %lu\n",ppl.length);
+   print_alloc_info();
+   str_free_all();
     print_alloc_info();
 
-    
-    print_alloc_info();
+
+ // char str[80] = "This is - www.tutorialspoint.com - website";
+ //  const char s[2] = " ";
+ //  char *token;
+ //  
+ //  /* get the first token 
+ //  token = strtok(ppl.str, s);
+ //  
+ //  /* walk through other tokens 
+ //  while( token != NULL ) {
+ //     printf( "{%s}\n", token );
+ //   
+ //     token = strtok(NULL, s);
+ //  }
+
+
 }
 
 

@@ -29,14 +29,14 @@ string read_file_to_string(const char *file_name){
     char *__dest = NULL;
     string __local ={NULL};
     FILE *file_ = fopen(file_name,"r+");
-    assert(file_ != NULL);   
+   // assert(file_ != NULL);   
     fseek(file_,0,SEEK_END);
     size_t file_size = ftell(file_);
     assert(file_size > 0);
     fseek(file_,0,SEEK_SET);
     __dest = (char *) malloc((file_size+1) *sizeof(char));
     memset(__dest,0,file_size+1);
-    (void) fread(__dest,1,file_size,file_);
+    (void) fread(__dest,1,file_size+1,file_);
     __local = newstr(__dest);
     free(__dest);
     fclose(file_);

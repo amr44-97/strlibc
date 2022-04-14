@@ -9,19 +9,23 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+
 #define __STRING_STACK_SIZE 20000
-#define __MIN_LIST__STR_ 500
+#define __MIN_LIST__STR_ 800
 
 /*
  * TODO
  * 1- add input strings [X]
  * 2- add empty strings
  * 3- add newstr with defined size [X]
- *
+ * 4- add substring function 
  *
 */
 
 // a container to all the allocatoins 
+
+
+
 
 static void* __STRING_STACK[__STRING_STACK_SIZE] = {NULL};
 static void* __MARKED_FREE[__STRING_STACK_SIZE] = {NULL};
@@ -30,8 +34,14 @@ static void* __MARKED_FREE[__STRING_STACK_SIZE] = {NULL};
 __attribute__((always_inline)) static inline void add_strptr_stack(void *__str);
 __attribute__((always_inline)) static inline void update_ptr_pointer(void *old_ptr, void * new_ptr);
 
-__attribute__((always_inline)) static inline int check_marked_free(string __str);
+__attribute__((always_inline)) static  inline int check_marked_free(string __str);
 __attribute__((always_inline)) static inline int check_marked_free_ptr(char* __str);
+
+static inline string str_substr(string s, size_t st_pos, size_t n);
+
+
+
+
 
 // counter to the allocations
 static unsigned int __stack_pos = 0;
@@ -51,12 +61,16 @@ __attribute__((always_inline)) static inline void update_ptr_pointer(void *old_p
 }
 
 void print_alloc_info(){
-    printf("__stack_pos = %u\n",__stack_pos);
-    printf("__Marked_Free_POS = %u\n",__Marked_Free_POS);
+     printf("===================MEMORY INFO==========================================\n");
+     printf("||\t\t\t\t\t\t\t");                                                     printf("\t\t||\n");
+     printf("||\t");  printf("\tAllocated pointers = %u",__stack_pos);   printf("\t\t\t\t\t||\n");
+     printf("||\t");  printf("\tFreed pointers = %u",__Marked_Free_POS); printf("\t\t\t\t\t||\n");
+     printf("||\t\t\t\t\t\t\t");                                                     printf("\t\t||\n");
+    printf("=========================================================================\n");
 }
 
 
-void str_free_all(){
+void  str_free_all(){
     int tmp  = (int) __stack_pos;
     for(int i = 0 ; i <  tmp ;i++){
       //  while( __STRING_STACK[i] != NULL){
@@ -98,13 +112,14 @@ string newstr(char *__str){
     const unsigned int len = strlen(__str);
 //[NOTE]  undefined behavior with non-null terminated strings
 //[NOTE]    // TODO fix undefined behavior
-    string __local ;
-    __local.str = (char*) calloc(len+1,sizeof(char));
-                     __local.length = len;
-    
+    string __local = {NULL};
+    __local.str = (char*) malloc( (len+1) * sizeof(char));
+     memccpy(__local.str, __str,'\0', len+1);
+    __local.length = len+1;
+
 //[NOTE]   // Valgrind gives error when copying to not enough space
-        memccpy(__local.str, __str,'\0', len+1);
         add_strptr_stack(__local.str);
+        __local.str[len] = '\0';
         return __local;
 }
 
@@ -113,12 +128,13 @@ string newstr_s(char *__str, size_t size){
 //[NOTE]  undefined behavior with non-null terminated strings
 //[NOTE]    // TODO fix undefined behavior
     string __local ;
-    __local.str = (char*) calloc(len+1,sizeof(char));
-                     __local.length = len;
+    __local.str = (char*) malloc((len+1)*sizeof(char));
+                     __local.length = len+1;
     
 //[NOTE]   // Valgrind gives error when copying to not enough space
         memccpy(__local.str, __str,'\0', len+1);
         add_strptr_stack(__local.str);
+        __local.str[len] = '\0';
         return __local;
 }
 
@@ -196,25 +212,35 @@ if(check_marked_free_ptr(__str.str) || __str.str == NULL){
 }
 
 
-void list_print(list __lis){
-
+void list_print(str_list __lis){
 
 printf("{");
   for (int i = 0; i < (int)__lis.length; ++i) {
-    
-    if (__lis.ptr[i] == NULL ) {
-      break;
-    }
-    if (*__lis.ptr[i] == '\0') { // to ignore NULL as they also considerd tokens
-      continue;
-    }
-    if(i <= (int) __lis.length-2){
-    printf(" \"%s\",", __lis.ptr[i]);
-    }
-    if(i == (int) __lis.length-1){
-    printf(" \"%s\"", __lis.ptr[i]);
-    }
-    
+      if(i ==(int)(__lis.length-1)){
+      printf("\"%s\" ",__lis.ptr[i].str);
+      // str_println(__lis.ptr[i]);
+      }else {
+      printf("\"%s\", ",__lis.ptr[i].str);
+    //str_println(__lis.ptr[i]);
+      }
+  
+  }
+  printf("}\n");
+
+}
+
+void printlis(list __lis){
+
+printf("{");
+  for (int i = 0; i < (int)__lis.length; ++i) {
+      if(i ==(int)(__lis.length-1)){
+      printf("\"%s\" ",__lis.ptr[i]);
+      // str_println(__lis.ptr[i]);
+      }else {
+      printf("\"%s\", ",__lis.ptr[i]);
+    //str_println(__lis.ptr[i]);
+      }
+  
   }
   printf("}\n");
 
@@ -222,7 +248,7 @@ printf("{");
 
 
 
-int str_find_char(string __str, char element){
+__attribute__((always_inline)) inline int str_find_char(string __str, char element){
     _pos __curr_pos = 0;
     for(int i =0 ; i< (int) __str.length;i++){
         if(__str.str[i] == element){__curr_pos = i;break;}
@@ -246,29 +272,52 @@ int str_find_char(string __str, char element){
 //    return ret;
 //}
 
+#define _SKIP_IF(X,Z) \
+    if((X) == (Z)){continue;}
 
-list str_split(char *strc) {
 
-    if(check_marked_free_ptr(strc) || strc == NULL){
+
+list str_split(char *strc, size_t __len) {
+
+   
+  if(check_marked_free_ptr(strc) || strc == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]: str_split error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
         exit(1);
     }
 
-  list new_list = {.ptr = calloc(__MIN_LIST__STR_,sizeof(char*)), .length =0};
-    
+//  size_t __len = strlen(strc);
+//    int zs=0;
+//    while(*(strc++)){
+//        if(*strc == ' ' || *strc == '\n' || *strc == ','){
+//            zs++;
+//        }
+//    }
+//  
+//    strc -= (__len+1);
+  list new_list = {.ptr = calloc(__len,sizeof(char*)), .length =0};  
   add_strptr_stack(new_list.ptr);
-  size_t __len = strlen(strc);
+  
 
   char* old_list = calloc(__len+1, sizeof(char));
   memcpy(old_list, strc,__len+1);
   add_strptr_stack(old_list);
+  
   char *ptr_listclone;
   ptr_listclone = &old_list[0];
   new_list.ptr[0] = ptr_listclone;
+//  char* next = &old_list[1];
   int i = 0,x =0 ;
-  
-  while (old_list[i] != '\0') {
-    if (old_list[i] == ' ' || old_list[i] == '\n' || old_list[i] == ',') {
+ // unsigned int tmp =1; //__MIN_LIST__STR_;
+// int res = (x == (int) tmp-1); 
+  for (;old_list[i] != '\0';) {
+    if ( (old_list[i] == ' ' && old_list[i+1] != ' ')|| old_list[i] == '\n' || old_list[i] == ',') {
+     //   if(res){
+ 	 //        char** optr = new_list.ptr;
+     //        new_list.ptr = realloc(new_list.ptr, (tmp+1)* sizeof(char*) ) ; //calloc(__MIN_LIST__STR_,sizeof(char*));
+     //        update_ptr_pointer(optr, new_list.ptr);
+     //        tmp++;
+     //        new_list.length = new_list.length + (tmp - __MIN_LIST__STR_);
+     //   }
       old_list[i] = '\0';
       ptr_listclone = &old_list[i + 1];
       new_list.ptr[x+1] = ptr_listclone;
@@ -280,41 +329,20 @@ list str_split(char *strc) {
     return new_list;
 }
 
-
-
-list str_split_new(char *strc) {
-
-    if(check_marked_free_ptr(strc) || strc == NULL){
-        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: str_split error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
-        exit(1);
-    }
-
-  list new_list = {.ptr = calloc(__MIN_LIST__STR_,sizeof(char*)), .length =0};
-    
-  add_strptr_stack(new_list.ptr);
-  size_t __len = strlen(strc);
-
-  char* old_list = calloc(__len+1, sizeof(char));
-  memcpy(old_list, strc,__len+1);
-  add_strptr_stack(old_list);
-  char *ptr_listclone;
-  ptr_listclone = &old_list[0];
-  new_list.ptr[0] = ptr_listclone;
-  int i = 0,x =0 ;
-  
-  while (old_list[i] != '\0') {
-    if (old_list[i] == ' ' || old_list[i] == '\n' || old_list[i] == ',') {
-      old_list[i] = '\0';
-      ptr_listclone = &old_list[i + 1];
-      new_list.ptr[x+1] = ptr_listclone;
-      x++;
-    }
-    i++;
-  }
-     new_list.length = x+1;
-    return new_list;
+__attribute__((always_inline)) static inline void add_str_list_stack(string * __str){
+        __STRING_STACK[__stack_pos] = __str;
+        __stack_pos++;
 }
 
+
+// implement using substr and newstr
+// TODO 
+/* 
+ * 1- ignore tokenizing whitespaces
+ *
+ *
+ *
+ * */
 
 
 
@@ -347,14 +375,15 @@ string str_cat(string __str ,char * __char){
     
     size_t tot = __str.length + strlen(__char);
     
-    string ret_str ={.str =(char *) malloc(sizeof(char)*(tot+1)) ,.length  = tot+1};
-     memset(ret_str.str,0,tot+1);
+    string ret_str ={.str =(char *) malloc(sizeof(char)*(tot)) ,.length  = tot};
+    
+    memset(ret_str.str,0,tot);
+    
     if(ret_str.str == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]: failed to reallocarray at [str_cat(),libstr.c:%d]\n" ANSI_COLOR_RESET,__LINE__);
             exit(1);
     }
     memcpy(ret_str.str,__str.str,__str.length);
-    
     memccpy(&ret_str.str[__str.length-1],__char,'\0',__len+1);
     //update_ptr_pointer(old_ptr, ret_str.str);
     add_strptr_stack(ret_str.str);
@@ -394,3 +423,15 @@ void str_input(string* buf){
 }
 
 
+
+
+static inline string str_substr(string s, size_t st_pos, size_t n){
+    string __strl = {NULL};
+
+    for(int i =0 ; i< (int) s.length; i++){
+        if(i == (int) st_pos){
+            __strl = newstr_s(&s.str[st_pos], n);
+        }
+    }
+    return __strl;
+}
