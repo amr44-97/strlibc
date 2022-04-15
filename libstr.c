@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <strings.h>
+
 
 
 #define __STRING_STACK_SIZE 20000
@@ -26,9 +28,9 @@
 
 
 
+void* __STRING_STACK[__STRING_STACK_SIZE] = {NULL};
+void* __MARKED_FREE[__STRING_STACK_SIZE]  =  {NULL};
 
-static void* __STRING_STACK[__STRING_STACK_SIZE] = {NULL};
-static void* __MARKED_FREE[__STRING_STACK_SIZE] = {NULL};
 //static void* __STRING_REALLOC[__STRING_STACK_SIZE] = {NULL};
 
 __attribute__((always_inline)) static inline void add_strptr_stack(void *__str);
@@ -52,6 +54,7 @@ __attribute__((always_inline)) static inline void add_strptr_stack(void *__str){
         __STRING_STACK[__stack_pos] = __str;
         __stack_pos++;
 }
+
 __attribute__((always_inline)) static inline void update_ptr_pointer(void *old_ptr, void * new_ptr){
     for(int i = 0 ; i < (int) __stack_pos; i++){
         if(__STRING_STACK[i] == old_ptr){
@@ -72,19 +75,17 @@ void print_alloc_info(){
 
 void  str_free_all(){
     int tmp  = (int) __stack_pos;
-    for(int i = 0 ; i <  tmp ;i++){
-      //  while( __STRING_STACK[i] != NULL){
-            if(__STRING_STACK[i] == NULL){continue;}  
-            if(check_marked_free_ptr(__STRING_STACK[i])){  continue;} // prevent double free errors
-                      
+    for(int i =0  ; i < tmp ;i++){
+         if(check_marked_free_ptr(__STRING_STACK[i]) == 1 || __STRING_STACK[i] == NULL){
+                Println(ANSI_COLOR_RED "[ERROR]: Marked free at str_free_all()\n" ANSI_COLOR_RESET);
+                continue;} // prevent double free errors
                       __MARKED_FREE[__Marked_Free_POS] = __STRING_STACK[i];
-                       free(__STRING_STACK[i]);
-                      __STRING_STACK[i] = NULL;
-                      __Marked_Free_POS++;
+                     free(__STRING_STACK[i]);
+                     __STRING_STACK[i] = NULL;
+                     __Marked_Free_POS++;
                       __stack_pos--;
-      //  }
     }
-    //__stack_pos = 0;
+    __stack_pos = 0;
 }
 
 void free_str(string __str){
@@ -143,10 +144,10 @@ string newstr_s(char *__str, size_t size){
 __attribute__((always_inline)) static inline int check_marked_free(string __str){
     int no_err = 0;
     if(__Marked_Free_POS > 0){ 
-        for( int i =0; i <= (int)__Marked_Free_POS;i++)
+        for( int i =0; i < (int)__Marked_Free_POS;i++)
           {
             if(__str.str == __MARKED_FREE[i]){
-                 //fprintf(stderr, "[ERROR:] %s",__error_type);
+                 fprintf(stderr,ANSI_COLOR_YELLOW "[ERROR:] Using marked free ptr\n" ANSI_COLOR_RESET);
                  no_err = 1;  
             }
         }
@@ -157,10 +158,10 @@ __attribute__((always_inline)) static inline int check_marked_free(string __str)
 __attribute__((always_inline)) static inline int  check_marked_free_ptr(char* __str){
     int no_err = 0;
     if(__Marked_Free_POS > 0){ 
-        for( int i =0; i <= (int)__Marked_Free_POS;i++)
+        for(int i =0; i < (int)__Marked_Free_POS;i++)
           {
-            if(__str == __MARKED_FREE[i]){
-                 //fprintf(stderr, "[ERROR:] %s",__error_type);
+            if( (void*)__str == __MARKED_FREE[i]){
+                 fprintf(stderr,ANSI_COLOR_YELLOW "[ERROR:] Using marked free ptr\n" ANSI_COLOR_RESET);
                  no_err = 1;  
             }
         }
@@ -277,9 +278,11 @@ __attribute__((always_inline)) inline int str_find_char(string __str, char eleme
 
 
 
+
+
 list str_split(char *strc, size_t __len) {
 
-   
+  
   if(check_marked_free_ptr(strc) || strc == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]: str_split error using a freed string at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
         exit(1);
@@ -294,12 +297,13 @@ list str_split(char *strc, size_t __len) {
 //    }
 //  
 //    strc -= (__len+1);
+//
   list new_list = {.ptr = calloc(__len,sizeof(char*)), .length =0};  
   add_strptr_stack(new_list.ptr);
   
 
   char* old_list = calloc(__len+1, sizeof(char));
-  memcpy(old_list, strc,__len+1);
+  memcpy(old_list, strc,__len);
   add_strptr_stack(old_list);
   
   char *ptr_listclone;
@@ -327,10 +331,22 @@ list str_split(char *strc, size_t __len) {
   }
      new_list.length = x+1;
     return new_list;
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
 __attribute__((always_inline)) static inline void add_str_list_stack(string * __str){
-        __STRING_STACK[__stack_pos] = __str;
+        __STRING_STACK[__stack_pos] = __str->str;
         __stack_pos++;
 }
 
@@ -435,3 +451,71 @@ static inline string str_substr(string s, size_t st_pos, size_t n){
     }
     return __strl;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////
+//////////////////// Generic functions ////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+
+
+void printINT(int x){
+    printf("%i\n",x);
+}
+
+void printFLOAT(float x){
+    printf("%f\n",x);
+}
+void printDOUBLE(int x){
+    printf("%d\n",x);
+}
+void printU_INT(unsigned int x){
+    printf("%u\n",x);
+}
+void printString(string x){
+    if(check_marked_free(x)){
+        printf(ANSI_COLOR_YELLOW "[ERROR]: unaccessable string , has been freed before.\n" ANSI_COLOR_RESET);
+        return;
+    }
+    printf("%s\n",x.str);
+}
+void printCHAR( char x){
+     printf("%c\n",x);
+}
+void printLIST(list x){
+ printf("{");
+  for (int i = 0; i < (int)x.length; ++i) {
+      if(i ==(int)(x.length-1)){
+  printf("\"%s\" ",x.ptr[i]);
+      }else {
+  printf("\"%s\", ",x.ptr[i]);
+      }
+  }
+  printf("}\n");
+   
+}
+void printSTRLIST(str_list x);
+
+void printCHAR_PTR(char* x){
+    if(check_marked_free_ptr(x)){
+        printf(ANSI_COLOR_YELLOW "[ERROR]: unaccessable string , has been freed before.\n" ANSI_COLOR_RESET);
+        return;
+    }
+
+    printf("%s\n",x);
+}
+
+void printINT_PTR(int* x){
+    printf("%p\n",(void *) x);
+}
+void printDEFAULT(){
+    printf(ANSI_COLOR_YELLOW "[ERROR]: UnKnown data type\n" ANSI_COLOR_RESET);
+}
+
+
+
+
+
+

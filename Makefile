@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS = -Wall -Wextra -pedantic -O3  -std=gnu2x
+CFLAGS = -Wall -Wextra -pedantic -g  -O2 -std=gnu11
 BINS = libtest_asm libtest  test libstr.so file_handle.so
 
 all: $(BINS)

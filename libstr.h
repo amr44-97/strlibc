@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
 typedef unsigned long int _pos;
 typedef struct string string;
 //typedef char** list;
@@ -15,7 +14,7 @@ typedef struct str_list str_list;
 
 struct string {
     char *str;
-    size_t length;
+   size_t length;
 };
 
 // length of list is the number of elements
@@ -37,8 +36,8 @@ string newstr_s(char *__str, size_t size);
 
 char* reverse_str(char *__string);  
 int str_find_char(string __str, char element);
-list str_split(char *strc, size_t strc_len);
-str_list str_split_new(char *strc, size_t tok_max);
+list str_split(char *strc, size_t __len);
+
 //char* split(string *__str,const char __delim[]);
 // static string copy(string __str); # defined static in the libstr.c
 char* substr(char *__str);
@@ -64,5 +63,37 @@ void str_print(string __str);
 void list_print(str_list __lis);
 int str_find_char(string __str, char element);
 void printlis(list __lis);
+
+
+
+// Generic operations
+
+void printINT(int x);
+void printFLOAT(float x);
+void printDOUBLE(int x);
+void printU_INT(unsigned int x);
+void printString(string x);
+void printCHAR(char x);
+void printLIST(list x);
+void printSTRLIST(str_list x);
+void printCHAR_PTR(char* x);
+void printINT_PTR(int* x);
+void printDEFAULT();
+
+
+
+
+#define Println(X) _Generic((X), \
+        int: printINT, \
+        double: printDOUBLE, \
+        char: printCHAR, \
+        string: printString, \
+        list: printLIST, \
+        unsigned int: printU_INT, \
+        int *: printINT_PTR, \
+        char *: printCHAR_PTR, \
+        float: printFLOAT, \
+        default: printDEFAULT)(X)
+
 
 #endif
