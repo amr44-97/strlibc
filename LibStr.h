@@ -6,13 +6,13 @@
 #include <stdio.h>
 
 typedef unsigned long int _pos;
-typedef struct string string;
+typedef struct String String;
 //typedef char** list;
 typedef struct list list;
-typedef struct str_list str_list;
+typedef struct Str_list Str_list;
 
 
-struct string {
+struct String {
     char *str;
    size_t length;
 };
@@ -23,46 +23,47 @@ struct list {
     size_t length;
 };
 
-struct str_list {
-    string* ptr;
+struct Str_list {
+    String* ptr;
     size_t length;
 };
 
 
 
-// string function
-string newstr(char *__str); 
-string newstr_s(char *__str, size_t size);
+// String function
+String StringBuild(char *__str); 
+String StringBuild_s(char *__str, size_t size);
 
-char* reverse_str(char *__string);  
-int str_find_char(string __str, char element);
-list str_split(char *strc, size_t __len);
+char* Str_reverse(char *__String);  
+int Str_find_char(String __str, char element);
+list Str_split(String strc);
+list Str_split_delim(char *strc,const char delimeter[]);
+String Str_substr(String s, size_t st_pos, size_t n);
 
-//char* split(string *__str,const char __delim[]);
-// static string copy(string __str); # defined static in the libstr.c
-char* substr(char *__str);
-string str_cat(string __str,char * __char);
-string _to_str(char* __char);
-void str_input(string* buf);
+//char* split(String *__str,const char __delim[]);
+// static String copy(string __str); # defined static in the libstr.c
+String Str_cat(String __str,char * __char);
+void Str_cat_m(String* __str ,char * __char); // deal with the string as mutable
+String _to_str(char* __char);
+void Str_input(String* buf);
 
 
 // memory functions 
-void  str_free_all();
-void free_str(string __str);
+void  Str_free_all();
+void free_str(String __str);
 void print_alloc_info();
 //static inline void add_strptr_stack(char *__str);
-//static inline int  check_marked_free(string __str);
+//static inline int  check_marked_free(String __str);
 
 // libstr.c
 // static inline void __char_check_error(char* __str);
-// static inline void __str_check_error(string __str);
+// static inline void __Str_check_error(String __str);
 
 // operations 
-void str_println(string __str);
-void str_print(string __str);
-void list_print(str_list __lis);
-int str_find_char(string __str, char element);
-void printlis(list __lis);
+//void Str_println(String __str);
+//void Str_print(String __str);
+//void list_print(Str_list __lis);
+//void printlis(list __lis);
 
 
 
@@ -72,10 +73,10 @@ void printINT(int x);
 void printFLOAT(float x);
 void printDOUBLE(int x);
 void printU_INT(unsigned int x);
-void printString(string x);
+void printString(String x);
 void printCHAR(char x);
 void printLIST(list x);
-void printSTRLIST(str_list x);
+void printSTRLIST(Str_list x);
 void printCHAR_PTR(char* x);
 void printINT_PTR(int* x);
 void printDEFAULT();
@@ -87,7 +88,7 @@ void printDEFAULT();
         int: printINT, \
         double: printDOUBLE, \
         char: printCHAR, \
-        string: printString, \
+        String: printString, \
         list: printLIST, \
         unsigned int: printU_INT, \
         int *: printINT_PTR, \

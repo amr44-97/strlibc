@@ -1,4 +1,6 @@
 #include "file_handle.h"
+#include "error_out.h"
+#include "LibStr.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,12 +10,13 @@
 // return a file description
 file open_file(const char *file_name,const char *flag)
 {
-    file sr = {NULL};
+    file sr = {0,0,NULL,.buf.str=NULL};
     FILE *file_ = fopen(file_name,flag);
     assert(file_ != NULL);   
     fseek(file_,0,SEEK_END);
     size_t file_size = ftell(file_);
-    assert(file_size > 0);
+    
+    //assert(file_size > 0);
     sr.size = file_size;
     fseek(file_,0,SEEK_SET);
     sr.ptr = file_;
@@ -25,25 +28,29 @@ void close_file(file fl){
     fclose(fl.ptr);
 }
 
-string read_file_to_string(const char *file_name){
+file read_file_to_string(const char *file_name){
+    
     char *__dest = NULL;
-    string __local ={NULL};
+    
+    file __local = {NULL};//{file_name,0,NULL,NULL};
+    __local.name = file_name;
     FILE *file_ = fopen(file_name,"r+");
-   // assert(file_ != NULL);   
+   
+    __local.ptr = file_;
+    if(file_ == NULL){
+        fprintf(stderr,ANSI_COLOR_RED "[ERROR]: UnKnown file [%s:%i] \n" ANSI_COLOR_RESET,__func__,__LINE__);
+        exit(-1);
+    }
     fseek(file_,0,SEEK_END);
     size_t file_size = ftell(file_);
     assert(file_size > 0);
     fseek(file_,0,SEEK_SET);
+    __local.size = file_size;
     __dest = (char *) malloc((file_size+1) *sizeof(char));
     memset(__dest,0,file_size+1);
     (void) fread(__dest,1,file_size+1,file_);
-    __local = newstr(__dest);
+    __local.buf = StringBuild(__dest);
     free(__dest);
-    fclose(file_);
     return __local;
 }
 
-//void close_file(file f){
-//    free(f.buf);
-//    f.buf = NULL;
-//}

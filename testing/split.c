@@ -1,4 +1,4 @@
-#include "../libstr.h"
+#include "../LibStr.h"
 #include "../file_handle.h"
 #include <string.h>
 #include <stdio.h>
@@ -6,20 +6,10 @@
 #include "../error_out.h"
 
 
+#define com(X) (f ## X)
 
 int main(){
-    
-
-    FILE *fp = fopen("../libstr.c", "r+");
-    fseek(fp, 0, SEEK_END);
-    size_t len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    char * cont = malloc(sizeof(char)* len+1);
-    memset(cont, 0, len+1);  
-    fread(cont, 1, len+1,fp);
-    cont[len] = '\0';
-   list vec = str_split(cont);
-   for(int i =0; i < vec.length;i++)
-       printf("{ %s }\n",vec.ptr[i]);
+ 
+    char *jk = "amr/deps" "adsa";
+    Println(jk);
 }

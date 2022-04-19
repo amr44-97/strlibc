@@ -5,11 +5,11 @@ BINS = libtest_asm libtest  test libstr.so file_handle.so
 
 all: $(BINS)
 
-libstr.o: libstr.c  libstr.h 
-	${CC} ${CFLAGS} -c libstr.c 
+LibStr.o: LibStr.c  LibStr.h 
+	${CC} ${CFLAGS} -c LibStr.c 
 
-libstr.so: libstr.c  libstr.h
-	$(CC) $(CFLAGS) -fPIC -shared -o $@ libstr.c  -lc
+libstr.so: LibStr.c  LibStr.h
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ LibStr.c  -lc
 
 
 file_handle.o: file_handle.c file_handle.h 
@@ -18,10 +18,10 @@ file_handle.o: file_handle.c file_handle.h
 file_handle.so: file_handle.c file_handle.h
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ file_handle.c -lc
 
-libtest: libtest.c file_handle.o libstr.o 
+libtest: libtest.c file_handle.o LibStr.o 
 	$(CC) $(CFLAGS) -o $@ $^
 
-test: ./vlunerabilities/test.c file_handle.o libstr.o 
+test: ./vlunerabilities/test.c file_handle.o LibStr.o 
 	$(CC) $(CFLAGS) -o $@ $^
 	mv $@ ./vlunerabilities/
 	
