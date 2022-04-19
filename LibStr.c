@@ -388,8 +388,8 @@ static  void __char_check_error(char* __str){
 
 
 String Str_cat(String __str ,char * __char){
-    __Str_check_error(__str);
-    __char_check_error(__char);
+   // __Str_check_error(__str);
+   // __char_check_error(__char);
 
     if( __str.str == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]:using a freed String at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
@@ -423,8 +423,8 @@ String Str_cat(String __str ,char * __char){
 
 
 void Str_cat_m(String* __str ,char * __char){
-    __Str_check_error(*__str);
-    __char_check_error(__char);
+  //  __Str_check_error(*__str);
+  //  __char_check_error(__char);
 
     if( __str->str == NULL){
         fprintf(stderr,ANSI_COLOR_RED "[ERROR]:using a freed String at" ANSI_COLOR_MAGENTA " [ %s:%d , %s()]\n" ANSI_COLOR_RESET,__FILE__,__LINE__,__func__);
